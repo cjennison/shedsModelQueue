@@ -11,17 +11,14 @@ console.log("Creating Queue")
 
 //process the job
 jobs.process('script', 1, function(job, done){
-  console.log("Queue: Processing script");
-
+  console.log("[Queue] > Processing script");
 
   //Parse Job Data
-  job.data = JSON.parse(job.data);
+  if(typeof(job.data) == "string")
+    job.data = JSON.parse(job.data);
 
   //Check if the job is valid to be run
   if(!validateJob(job.data)) return done(new Error('invalid job'));
-
-  //TODO: Create RUN Object from Database model
-  var run = {};
 
   // console.log(job)
   var dir = uuid.v4();
@@ -31,22 +28,20 @@ jobs.process('script', 1, function(job, done){
     else {
       console.log(dir + ": created")
 
-      //TODO: Store the directory in the RUN object
 
       //Write JSON file
-      writeJSON(job.data, "runs/" + dir + "/", function(){
-        runModel(job, local_directory);
+      writeJSON(job, "runs/" + dir + "/", function(){
+        runModel(job, local_directory, done);
       });
     }
   })
 
-  //Place script processing here
-  done();
+  
 })
 
 //Spawns the R script to run the job
 function runModel(job, dir, cb){
-  var script = "test_1.R" //TODO: replace with actual script from databaser
+  var script = job.data.model_script;
 
   //Create the opts for spawn
   var opts = {
@@ -65,7 +60,7 @@ function runModel(job, dir, cb){
   var args = [ __dirname + "/models/" + script, rargs ];
 
   //Spawn the session
-  var proc = spawn("Rscript", args, opts);
+  var proc = spawn("Rscript", [__dirname + "/models/" + script, __dirname + "/" + dir + "/", 'input.json', 'output.json'], opts);
 
   //Watch for data 
   proc.stdout.on('data', function(data){
@@ -76,6 +71,9 @@ function runModel(job, dir, cb){
     console.log("stderr: " + data);
   })
 
+  job.data.output = "I'm some output :D"
+  job.save();
+
   //Check Exit Code
   proc.on('exit', function(code){
     if(code === 0){
@@ -83,13 +81,16 @@ function runModel(job, dir, cb){
     } else {
       console.log("Failure")
     }
+    cb();
   })
 
 }
 
 //Write the JSON input field
-function writeJSON(data, dir, cb){
-  fs.writeFile(dir + "input.json", JSON.stringify(data.input, null), function(err){
+function writeJSON(job, dir, cb){
+  console.log("[writeJSON] > Writing JSON File")
+  console.log(job.data)
+  fs.writeFile(dir + "input.json", JSON.stringify(job.data.input, null), function(err){
     if(err) console.log(err)
     else {
       cb();
@@ -108,6 +109,7 @@ function validateJob(data){
 //queue events
 jobs.on('job complete', function(id, result){
   console.log("Job " + id + " completed")
+  console.log(result);
 })
 
 jobs.on('job failed', function(id, result){

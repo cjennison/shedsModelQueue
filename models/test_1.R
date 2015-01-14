@@ -7,7 +7,8 @@ library(jsonlite)
 library(dplyr)
 
 args <- commandArgs(TRUE)
-# print(args)
+# cmdargs <- fromJSON(args[1])
+print(args)
 
 # note: dir is already a function in R, better not to overwrite it, use wd instead
 # also don't need fromJSON since the working directory is just a command line argument
@@ -37,6 +38,8 @@ cat("------------------------------\n")
 # parse inputs file
 inputs <- fromJSON(input_file)
 
+print(inputs)
+
 # get list of location ids from inputs file
 location_ids <- inputs$location_ids
 
@@ -56,7 +59,6 @@ if (length(location_ids) == 0) {
   # use IN for multiple locations
   tbl_series <- filter(tbl_series, location_id %in% location_ids)
 }
-
 data <- left_join(tbl_series, tbl_values, by=c('id'='series_id'))
 
 # compute stats by location_id
