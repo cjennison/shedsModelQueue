@@ -45,8 +45,7 @@ function runModel(job, dir, cb){
   var args = [ __dirname + "/models/" + script, rargs ];
 
   //Spawn the session
-  job.progress(0); // -- set progress
-  console.log(job)
+  job.progress(10,100); // -- set progress
   var proc = spawn("Rscript", [__dirname + "/models/" + script, dir, 'input.json', 'output.json'], opts);
 
   //Watch for data 
@@ -87,5 +86,3 @@ jobs.on('job complete', function(id, result){
 jobs.on('job failed', function(id, result){
   console.log("Job " + id + " failed")
 })
-
-
