@@ -42,7 +42,7 @@ function runModel(job, dir, cb){
   });
 
   //Add script and Rargs to arg
-  var args = [ __dirname + "/models/" + script, rargs ];
+  var args = [ script, rargs ];
 
   //Spawn the session
   job.progress(10,100); // -- set progress
@@ -50,11 +50,11 @@ function runModel(job, dir, cb){
 
   //Watch for data 
   proc.stdout.on('data', function(data){
-    //console.log("stdout: " + data);
+    console.log("stdout: " + data);
   })
 
   proc.stderr.on('data', function(data){
-    //console.log("stderr: " + data);
+    console.log("stderr: " + data);
   })
 
   //Check Exit Code
